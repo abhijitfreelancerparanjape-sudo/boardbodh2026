@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "node scripts/seed.mjs",
-    "serve:demo": "node scripts/serve-demo.mjs"
+    "serve:demo": "node scripts/serve-demo.mjs",
+    "attempt:demo": "node scripts/attempt-demo.mjs"
   },
   "dependencies": {
     "next": "^15.1.6",
