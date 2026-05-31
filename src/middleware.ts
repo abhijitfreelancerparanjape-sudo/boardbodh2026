@@ -33,10 +33,31 @@ export async function middleware(request: NextRequest) {
   });
 
   // Refresh the session so server components get a fresh token.
+  let user = null;
   try {
-    await supabase.auth.getUser();
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
   } catch {
-    // Auth service unavailable. Continue unauthenticated.
+    // Auth service unavailable. Treat as unauthenticated.
+  }
+
+  const path = request.nextUrl.pathname;
+  const isProtectedPage = ["/dashboard", "/exam", "/attempt"].some((p) => path.startsWith(p));
+  const isAuthPage = path === "/login" || path === "/signup";
+
+  // Protect student PAGE routes (API routes handle their own 401s).
+  if (!user && isProtectedPage) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("next", path);
+    return NextResponse.redirect(url);
+  }
+
+  // Keep signed-in students out of the auth pages.
+  if (user && isAuthPage) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
   }
 
   return supabaseResponse;

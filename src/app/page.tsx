@@ -26,13 +26,19 @@ export default function Home() {
           भौतिकशास्त्र
         </p>
 
-        <div className="mt-10">
+        <div className="mt-10 flex items-center justify-center gap-4">
           <Link
-            href="/dashboard"
+            href="/signup"
             className="inline-flex items-center gap-2 rounded-full bg-terracotta px-6 py-3 text-sm font-medium text-bone transition-opacity hover:opacity-90"
           >
-            View the progression
+            Get started
             <span aria-hidden>→</span>
+          </Link>
+          <Link
+            href="/login"
+            className="text-sm text-ink/60 underline-offset-4 hover:text-ink hover:underline"
+          >
+            Sign in
           </Link>
         </div>
       </div>

@@ -12,6 +12,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/server";
 import { serveExamInstance } from "@/lib/serving/serve-exam";
+import { advanceProgress } from "@/lib/data/progress";
 import { FREE_TEXT_FORMATS } from "@/types/db";
 import type {
   Attempt,
@@ -547,6 +548,10 @@ export async function saveSelfAssessment(params: {
     })
     .eq("id", attempt.id);
   if (upErr) throw upErr;
+
+  // Finishing this exam advances the student's place in the fixed sequence.
+  const exam = await loadExam(db, attempt.exam_id);
+  await advanceProgress(params.userId, exam.subject_id, exam.sequence_index);
 
   const maxMarks = [...breakdown.values()].reduce((s, b) => s + b.max, 0);
   return {

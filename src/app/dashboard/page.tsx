@@ -1,16 +1,26 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import {
   getPrimarySubject,
   getExamSequence,
   getCurriculum,
   getNextExam,
 } from "@/lib/data/curriculum";
+import { getCurrentExamIndex } from "@/lib/data/progress";
 import { EXAM_KIND_LABEL } from "@/types/db";
+import { SignOut } from "@/components/sign-out";
 
 // Reads live data per request.
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
   const subject = await getPrimarySubject();
 
   if (!subject) {
@@ -25,18 +35,23 @@ export default async function Dashboard() {
     );
   }
 
-  const [exams, curriculum] = await Promise.all([
+  const [exams, curriculum, currentExamIndex] = await Promise.all([
     getExamSequence(subject.id),
     getCurriculum(subject.id),
+    getCurrentExamIndex(user.id, subject.id),
   ]);
 
-  // Phase 0: no per-student progress yet, so a fresh student is at index 0.
-  const currentExamIndex = 0;
   const nextExam = getNextExam(exams, currentExamIndex);
+  const allDone = !nextExam;
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
-      {/* Header */}
+      {/* Student bar */}
+      <div className="mb-10 flex items-center justify-between">
+        <span className="text-sm text-ink/55">{user.email}</span>
+        <SignOut />
+      </div>
+
       <div className="flex items-center gap-2">
         <span className="inline-block h-2 w-2 rounded-full bg-sage" />
         <span className="text-xs font-medium uppercase tracking-[0.2em] text-sage">
@@ -50,8 +65,8 @@ export default async function Dashboard() {
         A fixed path through the year. Finish each exam to unlock the next.
       </p>
 
-      {/* Next up */}
-      {nextExam && (
+      {/* Next up / completed */}
+      {nextExam ? (
         <section className="mt-10 rounded-2xl border border-terracotta/30 bg-terracotta/5 p-6">
           <div className="text-xs font-medium uppercase tracking-[0.18em] text-terracotta">
             Next up
@@ -73,6 +88,13 @@ export default async function Dashboard() {
             Start this exam →
           </Link>
         </section>
+      ) : (
+        <section className="mt-10 rounded-2xl border border-sage/30 bg-sage/5 p-6 text-center">
+          <h2 className="font-display text-2xl text-ink">Sequence complete</h2>
+          <p className="mt-2 text-sm text-ink/60">
+            You have finished every exam in this progression. Well done.
+          </p>
+        </section>
       )}
 
       {/* Full ordered sequence */}
@@ -82,15 +104,13 @@ export default async function Dashboard() {
         </h3>
         <ol className="mt-4 space-y-2">
           {exams.map((exam, i) => {
-            const isNext = i === currentExamIndex;
+            const isNext = !allDone && i === currentExamIndex;
             const isDone = i < currentExamIndex;
             return (
               <li
                 key={exam.id}
                 className={`flex items-center gap-4 rounded-xl border px-4 py-3 ${
-                  isNext
-                    ? "border-terracotta/40 bg-terracotta/5"
-                    : "border-ink/10 bg-white/40"
+                  isNext ? "border-terracotta/40 bg-terracotta/5" : "border-ink/10 bg-white/40"
                 }`}
               >
                 <span
@@ -102,7 +122,7 @@ export default async function Dashboard() {
                         : "bg-ink/10 text-ink/60"
                   }`}
                 >
-                  {exam.sequence_index}
+                  {isDone ? "✓" : exam.sequence_index}
                 </span>
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium text-ink">{exam.name}</div>
@@ -110,9 +130,8 @@ export default async function Dashboard() {
                     {EXAM_KIND_LABEL[exam.kind]} · {exam.duration_minutes} min
                   </div>
                 </div>
-                {isNext && (
-                  <span className="ml-auto text-xs font-medium text-terracotta">Next</span>
-                )}
+                {isNext && <span className="ml-auto text-xs font-medium text-terracotta">Next</span>}
+                {isDone && <span className="ml-auto text-xs font-medium text-sage">Done</span>}
               </li>
             );
           })}
@@ -121,9 +140,7 @@ export default async function Dashboard() {
 
       {/* Curriculum */}
       <section className="mt-12">
-        <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-ink/50">
-          Curriculum
-        </h3>
+        <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-ink/50">Curriculum</h3>
         <div className="mt-4 space-y-6">
           {curriculum.map((chapter) => (
             <div key={chapter.id}>
@@ -144,12 +161,6 @@ export default async function Dashboard() {
           ))}
         </div>
       </section>
-
-      <div className="mt-14">
-        <Link href="/" className="text-sm text-ink/50 underline-offset-4 hover:underline">
-          ← Back
-        </Link>
-      </div>
     </main>
   );
 }
