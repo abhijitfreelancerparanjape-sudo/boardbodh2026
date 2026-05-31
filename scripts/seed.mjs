@@ -4,10 +4,11 @@
 // it does not duplicate rows. Writes with the service-role key (bypasses RLS).
 // Run with:  npm run seed
 //
-// Scope (what the spec asks for at this step): one subject (Physics, CBSE),
-// 3 chapters, a few concepts each, and a fixed exam sequence
-// (chapter exams -> unit test -> terminal). No questions yet.
-
+// Seeds one subject (Physics, CBSE), 3 chapters, a few concepts each, a fixed
+// exam sequence (chapter exams -> unit test -> terminal), and a pool of mock
+// questions (4 per concept across bands/formats) each with a criticality
+// rubric. Questions are clearly templated mock content.
+//
 // Uses plain fetch against PostgREST (not supabase-js) so it runs on Node 20,
 // whose lack of native WebSocket trips supabase-js's realtime client.
 import { readFileSync } from "node:fs";
@@ -66,14 +67,92 @@ const concepts = [
   { id: "30000000-0000-0000-0000-000000000304", chapter_id: CH3, name: "Wheatstone Bridge" },
 ];
 
-// Fixed progression: chapter exam -> chapter exam -> chapter exam -> unit test -> terminal.
+// Fixed progression. scope carries the chapter ids plus, for serving, the
+// difficulty bands and how many questions the instance should contain.
 const exams = [
-  { id: "40000000-0000-0000-0000-000000000001", subject_id: SUBJECT, kind: "chapter", name: "Chapter 1 Exam: Electric Charges and Fields", scope: { chapter_ids: [CH1] }, sequence_index: 1, duration_minutes: 30 },
-  { id: "40000000-0000-0000-0000-000000000002", subject_id: SUBJECT, kind: "chapter", name: "Chapter 2 Exam: Electrostatic Potential and Capacitance", scope: { chapter_ids: [CH2] }, sequence_index: 2, duration_minutes: 30 },
-  { id: "40000000-0000-0000-0000-000000000003", subject_id: SUBJECT, kind: "chapter", name: "Chapter 3 Exam: Current Electricity", scope: { chapter_ids: [CH3] }, sequence_index: 3, duration_minutes: 30 },
-  { id: "40000000-0000-0000-0000-000000000004", subject_id: SUBJECT, kind: "unit_test", name: "Unit Test 1: Electrostatics and Current", scope: { chapter_ids: [CH1, CH2, CH3] }, sequence_index: 4, duration_minutes: 60 },
-  { id: "40000000-0000-0000-0000-000000000005", subject_id: SUBJECT, kind: "terminal", name: "Terminal Exam: Chapters 1 to 3", scope: { chapter_ids: [CH1, CH2, CH3] }, sequence_index: 5, duration_minutes: 120 },
+  { id: "40000000-0000-0000-0000-000000000001", subject_id: SUBJECT, kind: "chapter",   name: "Chapter 1 Exam: Electric Charges and Fields",            scope: { chapter_ids: [CH1],            difficulty_bands: ["foundational", "board_level"],  question_count: 5 }, sequence_index: 1, duration_minutes: 30 },
+  { id: "40000000-0000-0000-0000-000000000002", subject_id: SUBJECT, kind: "chapter",   name: "Chapter 2 Exam: Electrostatic Potential and Capacitance", scope: { chapter_ids: [CH2],            difficulty_bands: ["foundational", "board_level"],  question_count: 5 }, sequence_index: 2, duration_minutes: 30 },
+  { id: "40000000-0000-0000-0000-000000000003", subject_id: SUBJECT, kind: "chapter",   name: "Chapter 3 Exam: Current Electricity",                    scope: { chapter_ids: [CH3],            difficulty_bands: ["foundational", "board_level"],  question_count: 5 }, sequence_index: 3, duration_minutes: 30 },
+  { id: "40000000-0000-0000-0000-000000000004", subject_id: SUBJECT, kind: "unit_test", name: "Unit Test 1: Electrostatics and Current",               scope: { chapter_ids: [CH1, CH2, CH3], difficulty_bands: ["board_level"],                  question_count: 6 }, sequence_index: 4, duration_minutes: 60 },
+  { id: "40000000-0000-0000-0000-000000000005", subject_id: SUBJECT, kind: "terminal",  name: "Terminal Exam: Chapters 1 to 3",                        scope: { chapter_ids: [CH1, CH2, CH3], difficulty_bands: ["board_level", "advanced"],      question_count: 8 }, sequence_index: 5, duration_minutes: 120 },
 ];
+
+// Mock questions: 4 per concept across formats/bands, each with a rubric.
+const BAND_SCORE = { foundational: 0.3, board_level: 0.6, advanced: 0.85 };
+
+function buildQuestions() {
+  const questions = [];
+  const rubric = [];
+  let qn = 0;
+  let rn = 0;
+  const qid = () => `50000000-0000-0000-0000-${(++qn).toString(16).padStart(12, "0")}`;
+  const rid = () => `60000000-0000-0000-0000-${(++rn).toString(16).padStart(12, "0")}`;
+
+  for (const c of concepts) {
+    const templates = [
+      {
+        question_format: "true_false",
+        difficulty_band: "foundational",
+        prompt: `State whether the following is true or false, with a one-line justification: "${c.name} applies only in a vacuum."`,
+        options: ["True", "False"],
+        components: [
+          { text: `Correct answer: False, with a sound one-line justification referencing ${c.name}.`, criticality: "high", marks: 1 },
+        ],
+      },
+      {
+        question_format: "mcq",
+        difficulty_band: "board_level",
+        prompt: `Which option best states ${c.name}?`,
+        options: ["A) An unrelated definition", "B) The correct standard statement", "C) A common misconception", "D) None of the above"],
+        components: [{ text: "Correct option: B", criticality: "high", marks: 1 }],
+      },
+      {
+        question_format: "short",
+        difficulty_band: "board_level",
+        prompt: `Briefly explain ${c.name} and give one example where it is applied.`,
+        options: null,
+        components: [
+          { text: `States the core idea of ${c.name} correctly.`, criticality: "high", marks: 2 },
+          { text: "Gives a valid, relevant example.", criticality: "medium", marks: 1 },
+        ],
+      },
+      {
+        question_format: "long",
+        difficulty_band: "advanced",
+        prompt: `Explain ${c.name} in detail: state the assumptions, derive or justify the key result, and discuss one limitation.`,
+        options: null,
+        components: [
+          { text: `Correct, complete statement of ${c.name} with assumptions.`, criticality: "high", marks: 3 },
+          { text: "Correct derivation or justification of the key result.", criticality: "medium", marks: 1 },
+          { text: "Discusses a valid limitation or edge case.", criticality: "low", marks: 1 },
+        ],
+      },
+    ];
+
+    for (const t of templates) {
+      const id = qid();
+      const marks = t.components.reduce((s, x) => s + x.marks, 0);
+      questions.push({
+        id,
+        concept_id: c.id,
+        board_style: "CBSE",
+        question_format: t.question_format,
+        prompt: t.prompt,
+        options: t.options,
+        marks,
+        keywords: [c.name],
+        difficulty_band: t.difficulty_band,
+        difficulty_score: BAND_SCORE[t.difficulty_band],
+        source: "mock",
+        status: "live",
+      });
+      t.components.forEach((comp, i) => {
+        rubric.push({ id: rid(), question_id: id, text: comp.text, criticality: comp.criticality, marks: comp.marks, sort_order: i });
+      });
+    }
+  }
+  return { questions, rubric };
+}
 
 async function up(table, rows) {
   const res = await fetch(`${url}/rest/v1/${table}`, {
@@ -99,6 +178,9 @@ async function main() {
   await up("chapters", chapters);
   await up("concepts", concepts);
   await up("exams", exams);
+  const { questions, rubric } = buildQuestions();
+  await up("questions", questions);
+  await up("rubric_components", rubric);
   console.log("seed complete");
 }
 

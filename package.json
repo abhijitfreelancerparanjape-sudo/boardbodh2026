@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "node scripts/seed.mjs"
+    "seed": "node scripts/seed.mjs",
+    "serve:demo": "node scripts/serve-demo.mjs"
   },
   "dependencies": {
     "next": "^15.1.6",

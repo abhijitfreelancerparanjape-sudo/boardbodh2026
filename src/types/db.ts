@@ -3,6 +3,23 @@
 
 export type Board = "CBSE" | "Maharashtra";
 export type ExamKind = "chapter" | "unit_test" | "terminal";
+export type DifficultyBand = "foundational" | "board_level" | "advanced";
+export type Criticality = "high" | "medium" | "low";
+export type QuestionStatus = "draft" | "live";
+export type QuestionSource = "mock" | "generated" | "official";
+
+export type QuestionFormat =
+  | "mcq"
+  | "fill_blank"
+  | "true_false"
+  | "two_tier"
+  | "assertion_reason"
+  | "short"
+  | "long"
+  | "numerical"
+  | "error_detection"
+  | "compare_contrast"
+  | "diagram";
 
 export interface Subject {
   id: string;
@@ -30,6 +47,8 @@ export interface Concept {
 export interface ExamScope {
   chapter_ids?: string[];
   concept_ids?: string[];
+  difficulty_bands?: DifficultyBand[];
+  question_count?: number;
 }
 
 export interface Exam {
