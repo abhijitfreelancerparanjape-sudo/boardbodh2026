@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "BoardBodh";
 
 export default function Home() {
@@ -24,11 +26,14 @@ export default function Home() {
           भौतिकशास्त्र
         </p>
 
-        <div className="mt-10 inline-flex items-center gap-2 rounded-full border border-terracotta/30 bg-terracotta/5 px-4 py-2">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-terracotta" />
-          <span className="text-sm text-terracotta">
-            Scaffold running locally
-          </span>
+        <div className="mt-10">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 rounded-full bg-terracotta px-6 py-3 text-sm font-medium text-bone transition-opacity hover:opacity-90"
+          >
+            View the progression
+            <span aria-hidden>→</span>
+          </Link>
         </div>
       </div>
     </main>
