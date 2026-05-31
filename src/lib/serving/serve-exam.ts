@@ -13,7 +13,15 @@
 
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/server";
+import { FREE_TEXT_FORMATS } from "@/types/db";
 import type { Exam, ExamScope, DifficultyBand, QuestionFormat, Board } from "@/types/db";
+
+function isFreeText(format: QuestionFormat): boolean {
+  return (FREE_TEXT_FORMATS as QuestionFormat[]).includes(format);
+}
+
+// Fraction of an exam we aim to make free-text, when the pool allows.
+const FREE_TEXT_TARGET = 0.4;
 
 export interface ServedQuestion {
   id: string;
@@ -40,8 +48,8 @@ const SAFE_COLUMNS =
 
 const ALL_BANDS: DifficultyBand[] = ["foundational", "board_level", "advanced"];
 
-// Round-robin across concepts so a served set is not all from one concept.
-function selectSpread(questions: ServedQuestion[], count: number): ServedQuestion[] {
+// Round-robin across concepts so a picked set is not all from one concept.
+function spreadByConcept(questions: ServedQuestion[], count: number): ServedQuestion[] {
   const byConcept = new Map<string, ServedQuestion[]>();
   for (const q of questions) {
     const list = byConcept.get(q.concept_id) ?? [];
@@ -54,6 +62,37 @@ function selectSpread(questions: ServedQuestion[], count: number): ServedQuestio
   while (out.length < count && groups.some((g) => g.length > 0)) {
     const g = groups[i % groups.length];
     const q = g.shift();
+    if (q) out.push(q);
+    i++;
+  }
+  return out;
+}
+
+// Select a set spread across concepts AND with a realistic format blend: aim
+// for ~FREE_TEXT_TARGET free-text (when the pool has them), fill the rest with
+// objective, then interleave so free-text is not all bunched at the end.
+function selectSpread(questions: ServedQuestion[], count: number): ServedQuestion[] {
+  const freeTextPool = questions.filter((q) => isFreeText(q.question_format));
+  const objectivePool = questions.filter((q) => !isFreeText(q.question_format));
+
+  const freeTarget = Math.min(freeTextPool.length, Math.max(1, Math.round(count * FREE_TEXT_TARGET)));
+  const chosenFree = spreadByConcept(freeTextPool, freeTarget);
+  const chosenObj = spreadByConcept(objectivePool, count - chosenFree.length);
+
+  // If one pool ran short, top up from whatever questions remain.
+  const used = new Set([...chosenFree, ...chosenObj].map((q) => q.id));
+  const topUp =
+    chosenFree.length + chosenObj.length < count
+      ? spreadByConcept(questions.filter((q) => !used.has(q.id)), count - chosenFree.length - chosenObj.length)
+      : [];
+
+  // Interleave objective and free-text for a varied order.
+  const lists = [chosenObj, [...chosenFree, ...topUp]];
+  const out: ServedQuestion[] = [];
+  let i = 0;
+  while (out.length < count && lists.some((l) => l.length > 0)) {
+    const l = lists[i % lists.length];
+    const q = l.shift();
     if (q) out.push(q);
     i++;
   }
