@@ -22,7 +22,7 @@ const tiroDevanagari = Tiro_Devanagari_Marathi({
   display: "swap",
 });
 
-const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "APP_NAME";
+const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "BoardBodh";
 
 export const metadata: Metadata = {
   title: appName,

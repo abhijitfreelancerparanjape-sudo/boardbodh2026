@@ -1,4 +1,4 @@
-const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "APP_NAME";
+const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "BoardBodh";
 
 export default function Home() {
   return (

@@ -5,7 +5,7 @@ This file is read on every session. Keep it accurate.
 ## What this is
 A board-exam intelligence platform for Std 12 Physics (CBSE + Maharashtra). Students follow a guided year-long progression of exams (chapter exam -> unit test -> terminal), never see the same question twice, and learn which concepts they are weakest on. This repo is Phase 0: the engine running on mock Physics content. No AI generation, no real papers, no studio, no Gold tier yet.
 
-Working name: BoardBodh (used as the internal/working name and for the repo/Vercel project). Still pending IP India trademark clearance, so treat it as the working name only and do not present it as a final, confirmed public brand until cleared. The in-app wordmark defaults to APP_NAME in code and is driven by NEXT_PUBLIC_APP_NAME.
+App name: BoardBodh. Used as the app name, in-app wordmark, repo, and Vercel project. The wordmark is driven by NEXT_PUBLIC_APP_NAME and defaults to "BoardBodh" in code. Trademark clearance with IP India is still pending, so keep that in mind before any large public/brand launch, but BoardBodh is the working app name now.
 
 ## Stack (match my existing products Abhilekh and Saral Studio)
 - Next.js 15 (App Router)
