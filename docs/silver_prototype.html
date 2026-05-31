@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Susmruti Classes · Self-Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700&family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ----------------------------------------------------------------------------
+   SILVER SELF-ASSESSMENT PROTOTYPE  (HTML/CSS/JS, self-contained)
+   Susmruti Classes — powered by Abhijit AI
+
+   Full journey: library -> rules -> timed exam (viewer + upload)
+   -> submit gate -> unlock model answers -> self-score -> result
+
+   DATA LAYER: all data flows through the `db` object near the top of the
+   <script>. It is mock today; each method returns a Supabase-shaped
+   { data, error } so going live = swap method bodies for supabase-js,
+   markup untouched. Timer is server-authoritative in spirit: derived from a
+   single started_at, never an accumulating client tick.
+---------------------------------------------------------------------------- */
+:root{
+  --navy:#0E1A2B; --navy2:#152740; --cream:#F4ECD8; --creamSoft:#FBF6EA;
+  --gold:#C8A24B; --goldSoft:#E0C886; --ink:#1B2838; --muted:#6B7A8D;
+  --line:#E3D9C2; --good:#4E7C5A; --warn:#B5652E;
+  --display:'Lora',Georgia,serif; --body:'Poppins',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;}
+body{background:var(--cream);font-family:var(--body);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
+button{font-family:var(--body);transition:all .18s ease;cursor:pointer;}
+button:hover:not(:disabled){transform:translateY(-1px);}
+button:disabled{cursor:not-allowed;}
+.hidden{display:none !important;}
+
+/* header */
+header{background:var(--navy);color:var(--cream);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:2px solid var(--gold);flex-wrap:wrap;}
+.brandWrap{display:flex;align-items:center;gap:12px;}
+.mark{width:42px;height:42px;border-radius:10px;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:22px;}
+.brandName{font-family:var(--display);font-size:18px;font-weight:600;}
+.brandSub{font-size:11.5px;color:rgba(244,236,216,.6);letter-spacing:.3px;}
+.progress{display:flex;gap:18px;align-items:center;}
+.progStep{display:flex;align-items:center;gap:7px;}
+.progDot{width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(244,236,216,.3);display:grid;place-items:center;font-size:12px;font-weight:600;font-family:var(--mono);color:rgba(244,236,216,.5);}
+.progDot.on{background:var(--gold);border-color:var(--gold);color:var(--navy);}
+.progLabel{font-size:12px;font-weight:500;color:rgba(244,236,216,.45);}
+.progLabel.on{color:var(--cream);}
+.userChip{display:flex;align-items:center;gap:10px;}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--navy2);border:1px solid var(--gold);display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--goldSoft);}
+.uName{font-size:13px;font-weight:600;}
+.uMail{font-size:11px;color:rgba(244,236,216,.55);}
+
+main{flex:1;}
+footer{text-align:center;padding:18px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);}
+footer span{color:var(--goldSoft);}
+
+.page{max-width:1120px;margin:0 auto;padding:40px 28px;}
+.pageHead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:32px;flex-wrap:wrap;}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin:0 0 8px;}
+h1{font-family:var(--display);font-size:36px;font-weight:600;margin:0;color:var(--navy);line-height:1.1;}
+.lead{font-size:15px;color:var(--muted);line-height:1.65;max-width:560px;margin:12px 0 0;}
+
+.packCard{background:var(--navy);color:var(--cream);border-radius:16px;padding:18px 22px;min-width:230px;}
+.packRow{display:flex;justify-content:space-between;padding:5px 0;font-size:13.5px;}
+.packLabel{color:rgba(244,236,216,.6);font-size:12.5px;}
+.packVal{font-weight:600;font-family:var(--display);}
+.packVal.gold{color:var(--gold);}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
+.paperCard{background:var(--creamSoft);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px;}
+.paperCard.locked{opacity:.62;}
+.paperTop{display:flex;gap:8px;align-items:center;}
+.boardTag{background:var(--navy);color:var(--cream);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;letter-spacing:.5px;}
+.gradeTag{color:var(--navy);border:1px solid var(--line);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;}
+.marksTag{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);}
+.paperTitle{font-family:var(--display);font-size:20px;font-weight:600;color:var(--navy);margin:0;line-height:1.25;}
+.paperMeta{display:flex;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted);}
+.primaryBtn{background:var(--gold);color:var(--navy);border:none;border-radius:10px;padding:12px 20px;font-size:14.5px;font-weight:600;}
+.bigBtn{width:100%;padding:15px;font-size:15.5px;margin-top:22px;}
+.lockedBtn{background:transparent;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:12px 20px;font-size:14px;}
+
+.linkBack{background:none;border:none;color:var(--muted);font-size:14px;margin-bottom:18px;padding:0;}
+.rulesCard{background:var(--creamSoft);border:1px solid var(--line);border-radius:20px;padding:40px;max-width:640px;}
+.ruleList{display:flex;flex-direction:column;gap:14px;margin:28px 0;}
+.ruleItem{display:flex;gap:14px;align-items:flex-start;background:var(--cream);border-radius:12px;padding:14px 16px;border:1px solid var(--line);}
+.ruleIcon{font-size:22px;line-height:1;}
+.ruleHead{font-weight:600;font-size:15px;color:var(--navy);}
+.ruleSub{font-size:13px;color:var(--muted);margin-top:2px;}
+.checkRow{display:flex;gap:11px;align-items:flex-start;font-size:13.5px;color:var(--ink);line-height:1.5;cursor:pointer;}
+.checkRow input{width:18px;height:18px;accent-color:var(--gold);margin-top:1px;flex-shrink:0;}
+.demoNote{font-size:12px;color:var(--warn);font-style:italic;margin-top:14px;line-height:1.5;}
+
+.examWrap{max-width:1240px;margin:0 auto;padding:0 20px 40px;}
+.timerBar{position:sticky;top:0;z-index:20;background:var(--creamSoft);border:1px solid var(--line);border-radius:14px;padding:14px 20px;margin:20px 0;display:flex;align-items:center;gap:20px;box-shadow:0 6px 24px rgba(14,26,43,.08);}
+.timerBar.low{border-color:var(--warn);}
+.timerLabel{font-size:11.5px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);}
+.timerClock{font-family:var(--mono);font-size:30px;font-weight:500;line-height:1;color:var(--navy);}
+.timerClock.low{color:var(--warn);}
+.timerTrack{flex:1;height:8px;background:var(--line);border-radius:5px;overflow:hidden;}
+.timerFill{height:100%;border-radius:5px;background:var(--gold);transition:width .25s linear;}
+.timerFill.low{background:var(--warn);}
+.submitBtn{background:var(--navy);color:var(--cream);border:none;border-radius:10px;padding:12px 22px;font-size:14.5px;font-weight:600;}
+
+.examGrid{display:grid;grid-template-columns:1fr 340px;gap:22px;align-items:start;}
+.viewer{position:relative;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;}
+.viewerHead{display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--line);background:var(--creamSoft);}
+.viewerTitle{font-family:var(--display);font-weight:600;color:var(--navy);font-size:15px;}
+.watermarkLayer{position:absolute;inset:0;top:58px;display:grid;grid-template-columns:repeat(3,1fr);place-items:center;pointer-events:none;opacity:.05;transform:rotate(-24deg) scale(1.4);z-index:1;}
+.watermarkText{font-family:var(--mono);font-size:12px;color:var(--navy);white-space:nowrap;}
+.paperSheet{padding:28px 32px;position:relative;z-index:2;}
+.section{margin-bottom:26px;}
+.sectionHead{display:flex;align-items:baseline;gap:12px;border-bottom:2px solid var(--navy);padding-bottom:7px;margin-bottom:14px;}
+.sectionName{font-family:var(--display);font-size:17px;font-weight:600;color:var(--navy);}
+.sectionNote{font-size:12.5px;color:var(--muted);}
+.question{display:flex;gap:12px;padding:11px 0;border-bottom:1px dotted var(--line);font-size:14.5px;line-height:1.55;}
+.qNum{font-family:var(--mono);font-weight:600;color:var(--gold);flex-shrink:0;font-size:13.5px;}
+.qText{flex:1;color:var(--ink);}
+.qMarks{font-family:var(--mono);color:var(--muted);font-size:13px;flex-shrink:0;}
+
+.uploadRail{background:var(--creamSoft);border:1px solid var(--line);border-radius:16px;padding:22px;position:sticky;top:96px;}
+.railTitle{font-family:var(--display);font-size:17px;font-weight:600;color:var(--navy);margin:0 0 4px;}
+.railSub{font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5;}
+.dropZone{border:2px dashed var(--line);border-radius:14px;padding:30px 16px;text-align:center;background:var(--creamSoft);transition:all .2s;}
+.dropZone.over{border-color:var(--gold);background:rgba(200,162,75,.08);}
+.dropIcon{font-size:26px;color:var(--gold);}
+.dropText{font-weight:600;font-size:14px;color:var(--navy);margin-top:8px;}
+.dropSub{font-size:12.5px;color:var(--muted);margin-top:2px;}
+.thumbGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;}
+.thumb{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:1px solid var(--line);}
+.thumb img{width:100%;height:100%;object-fit:cover;}
+.thumbBadge{position:absolute;bottom:4px;left:4px;background:var(--navy);color:var(--cream);font-size:10px;font-family:var(--mono);padding:2px 6px;border-radius:5px;}
+.thumbRemove{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(14,26,43,.8);color:#fff;font-size:14px;display:grid;place-items:center;line-height:1;}
+.uploadCount{font-size:12.5px;color:var(--muted);text-align:center;margin-top:14px;font-family:var(--mono);}
+
+.submittedCard{background:var(--creamSoft);border:1px solid var(--line);border-radius:20px;padding:48px;text-align:center;max-width:540px;margin:40px auto;}
+.checkSeal{width:72px;height:72px;border-radius:50%;background:var(--good);color:#fff;display:grid;place-items:center;font-size:38px;margin:0 auto 22px;}
+.lateChip{display:inline-block;background:rgba(181,101,46,.12);color:var(--warn);font-size:13px;padding:8px 16px;border-radius:8px;margin-top:18px;}
+
+.scoreHero{background:var(--navy);color:var(--cream);border-radius:24px;padding:52px;text-align:center;max-width:560px;margin:20px auto;}
+.scoreHero .eyebrow{color:var(--gold);}
+.scoreHero .lead{color:rgba(244,236,216,.7);margin-left:auto;margin-right:auto;}
+.scoreBig{font-family:var(--display);font-size:76px;font-weight:700;color:var(--cream);line-height:1;margin:10px 0;}
+.scoreOf{font-size:30px;color:rgba(244,236,216,.5);font-weight:400;}
+.scorePct{font-family:var(--mono);font-size:20px;color:var(--gold);margin-bottom:20px;}
+.scoreBarTrack{height:10px;background:var(--navy2);border-radius:6px;overflow:hidden;margin:0 0 8px;}
+.scoreBarFill{height:100%;background:linear-gradient(90deg,var(--gold),var(--goldSoft));border-radius:6px;}
+.upsellRow{display:flex;gap:12px;justify-content:center;margin-top:26px;flex-wrap:wrap;}
+.goldGhost{background:transparent;color:var(--goldSoft);border:1px solid var(--gold);border-radius:10px;padding:12px 20px;font-size:14px;font-weight:600;}
+
+.runningCard{background:var(--navy);color:var(--cream);border-radius:16px;padding:16px 22px;text-align:center;min-width:160px;}
+.runningVal{font-family:var(--display);font-size:34px;font-weight:600;color:var(--gold);line-height:1.1;margin:4px 0;}
+
+.assessGrid{display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start;}
+.sheetCol{position:sticky;top:20px;}
+.emptySheets{font-size:13px;color:var(--muted);border:1px dashed var(--line);border-radius:12px;padding:24px;text-align:center;}
+.sheetThumbs{display:flex;flex-direction:column;gap:12px;}
+.sheetThumb{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);}
+.sheetThumb img{width:100%;display:block;}
+.answerCol{display:flex;flex-direction:column;gap:16px;}
+.answerCard{background:var(--creamSoft);border:1px solid var(--line);border-radius:14px;padding:22px;}
+.answerHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.answerMax{font-family:var(--mono);font-size:12.5px;color:var(--muted);}
+.answerText{font-size:14px;line-height:1.65;color:var(--ink);margin:0 0 16px;}
+.scoreInputRow{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:14px;flex-wrap:wrap;}
+.scoreInputLabel{font-size:13px;font-weight:500;color:var(--navy);}
+.stepper{display:flex;gap:6px;}
+.stepBtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:14px;font-weight:600;font-family:var(--mono);}
+.stepBtn.on{background:var(--gold);border-color:var(--gold);color:var(--navy);}
+
+@media(max-width:860px){
+  .examGrid,.assessGrid{grid-template-columns:1fr;}
+  .uploadRail,.sheetCol{position:static;}
+  .progress{display:none;}
+}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brandWrap">
+      <div class="mark">स</div>
+      <div>
+        <div class="brandName">Susmruti Classes</div>
+        <div class="brandSub">CBSE Class X · Mathematics</div>
+      </div>
+    </div>
+    <div class="progress" id="progress"></div>
+    <div class="userChip">
+      <div class="avatar" id="avatar"></div>
+      <div>
+        <div class="uName" id="uName"></div>
+        <div class="uMail" id="uMail"></div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main"></main>
+
+  <footer>Susmruti Classes · self-assessment · <span>powered by Abhijit AI</span></footer>
+
+<script>
+/* ============================================================================
+   MOCK DATA LAYER — shapes mirror Supabase tables from silver_build_spec.md
+============================================================================ */
+const MOCK_PAPERS = [
+  {
+    id:"paper_cbse_x_maths_01", subject_id:"maths_x", subject_label:"Mathematics",
+    board:"CBSE", grade:"Class X", title:"Standard Mathematics — Sample Paper 1",
+    duration_minutes:180, scan_buffer_minutes:15, max_marks:80,
+    sections:[
+      {name:"Section A", note:"Multiple choice & very short answer · 1 mark each", questions:[
+        {n:1,marks:1,text:"The HCF of 96 and 404 is:  (a) 2  (b) 4  (c) 8  (d) 12"},
+        {n:2,marks:1,text:"If the roots of ax² + bx + c = 0 are equal, then:  (a) b² = ac  (b) b² = 4ac  (c) b² > 4ac  (d) b² < 4ac"},
+        {n:3,marks:1,text:"The distance of the point (3, 4) from the origin is ____ units."}
+      ]},
+      {name:"Section B", note:"Short answer · 3 marks each", questions:[
+        {n:4,marks:3,text:"Prove that √5 is irrational."},
+        {n:5,marks:3,text:"Find the coordinates of the point which divides the line segment joining A(4, −3) and B(8, 5) in the ratio 3 : 1 internally."}
+      ]},
+      {name:"Section C", note:"Long answer · 5 marks each", questions:[
+        {n:6,marks:5,text:"A train travels 360 km at a uniform speed. If the speed had been 5 km/h more, it would have taken 1 hour less for the same journey. Find the speed of the train."}
+      ]}
+    ],
+    model_answers:[
+      {n:1,marks:1,answer:"(b) 4.  96 = 2⁵ × 3, 404 = 2² × 101. Common factors → 2² = 4."},
+      {n:2,marks:1,answer:"(b) b² = 4ac. Equal roots ⇒ discriminant = 0 ⇒ b² − 4ac = 0."},
+      {n:3,marks:1,answer:"5 units.  √(3² + 4²) = √(9 + 16) = √25 = 5."},
+      {n:4,marks:3,answer:"Assume √5 = p/q in lowest terms (q ≠ 0). Then 5q² = p², so 5 | p², hence 5 | p. Let p = 5k ⇒ 5q² = 25k² ⇒ q² = 5k², so 5 | q. Both divisible by 5 contradicts lowest terms. ∴ √5 is irrational."},
+      {n:5,marks:3,answer:"Section formula with m:n = 3:1. x = (3·8 + 1·4)/4 = 28/4 = 7. y = (3·5 + 1·(−3))/4 = 12/4 = 3. Point = (7, 3)."},
+      {n:6,marks:5,answer:"Let speed = x km/h. 360/x − 360/(x+5) = 1 ⇒ 1800 = x² + 5x ⇒ x² + 5x − 1800 = 0 ⇒ (x + 45)(x − 40) = 0. x > 0 ⇒ x = 40 km/h."}
+    ]
+  },
+  {id:"paper_cbse_x_maths_02", subject_label:"Mathematics", board:"CBSE", grade:"Class X",
+   title:"Standard Mathematics — Sample Paper 2", duration_minutes:180, scan_buffer_minutes:15, max_marks:80, locked:true},
+  {id:"paper_cbse_x_sci_01", subject_label:"Science", board:"CBSE", grade:"Class X",
+   title:"Science — Sample Paper 1", duration_minutes:180, scan_buffer_minutes:15, max_marks:80, locked:true}
+];
+const MOCK_PURCHASE = {id:"purchase_001", user_id:"user_demo", subject_id:"maths_x", package_size:6, papers_remaining:5, expires_at:"2026-09-30"};
+const MOCK_USER = {id:"user_demo", name:"Aarav Kulkarni", email:"aarav.k@example.com"};
+
+// Mock DB — each method returns Supabase-shaped { data, error }.
+const db = {
+  async listPapers(){ return {data:MOCK_PAPERS, error:null}; },
+  async getPurchase(){ return {data:MOCK_PURCHASE, error:null}; },
+  async createAttempt(paperId){
+    return {data:{id:"attempt_"+Math.random().toString(36).slice(2,8), paper_id:paperId,
+      started_at:new Date().toISOString(), submitted_at:null, late:false, status:"in_progress", self_score:null}, error:null};
+  },
+  async submitAttempt(attempt, late){
+    return {data:{...attempt, submitted_at:new Date().toISOString(), late, status:"submitted"}, error:null};
+  }
+};
+
+/* ============================================================================
+   DEMO CONFIG
+============================================================================ */
+const DEMO_FAST = true;                 // compress window so the gate is visible
+function windowSeconds(p){ return DEMO_FAST ? 90 : (p.duration_minutes + p.scan_buffer_minutes)*60; }
+
+/* ============================================================================
+   APP STATE
+============================================================================ */
+const state = {
+  stage:"library", papers:[], purchase:null, user:MOCK_USER,
+  activePaper:null, attempt:null, uploads:[], scores:{}
+};
+let timerId = null;
+
+/* ============================================================================
+   HELPERS
+============================================================================ */
+const $ = (sel,root=document)=>root.querySelector(sel);
+const el = (tag,cls,html)=>{const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e;};
+function fmtClock(s){ if(s<0)s=0; const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=s%60,p=n=>String(n).padStart(2,"0"); return h>0?`${p(h)}:${p(m)}:${p(x)}`:`${p(m)}:${p(x)}`; }
+function esc(t){const d=document.createElement("div");d.textContent=t;return d.innerHTML;}
+
+/* ============================================================================
+   HEADER
+============================================================================ */
+function renderHeader(){
+  const steps=["library","rules","exam","submitted","results"];
+  const labels={library:"Papers",rules:"Brief",exam:"Exam",submitted:"Submitted",results:"Self-assess"};
+  const idx=steps.indexOf(state.stage);
+  const prog=$("#progress"); prog.innerHTML="";
+  steps.forEach((s,i)=>{
+    const wrap=el("div","progStep");
+    wrap.innerHTML=`<div class="progDot ${i<=idx?'on':''}">${i+1}</div><span class="progLabel ${i<=idx?'on':''}">${labels[s]}</span>`;
+    prog.appendChild(wrap);
+  });
+  $("#avatar").textContent=state.user.name.split(" ").map(x=>x[0]).join("");
+  $("#uName").textContent=state.user.name;
+  $("#uMail").textContent=state.user.email;
+}
+
+/* ============================================================================
+   STAGE: LIBRARY
+============================================================================ */
+function renderLibrary(){
+  const p=state.purchase;
+  const main=$("#main"); main.innerHTML="";
+  const page=el("div","page");
+  page.innerHTML=`
+    <div class="pageHead">
+      <div><p class="eyebrow">Your subscription</p><h1>Mathematics paper pack</h1></div>
+      <div class="packCard">
+        <div class="packRow"><span class="packLabel">Package</span><span class="packVal">${p.package_size} papers</span></div>
+        <div class="packRow"><span class="packLabel">Remaining</span><span class="packVal gold">${p.papers_remaining}</span></div>
+        <div class="packRow"><span class="packLabel">Valid till</span><span class="packVal">30 Sep 2026</span></div>
+      </div>
+    </div>
+    <div class="grid" id="paperGrid"></div>`;
+  main.appendChild(page);
+  const gridEl=$("#paperGrid",page);
+  state.papers.forEach(pp=>{
+    const card=el("article","paperCard"+(pp.locked?" locked":""));
+    card.innerHTML=`
+      <div class="paperTop"><span class="boardTag">${pp.board}</span><span class="gradeTag">${pp.grade}</span></div>
+      <h3 class="paperTitle">${esc(pp.title)}</h3>
+      <div class="paperMeta"><span>⏱ ${pp.duration_minutes} min</span><span>·</span><span>${pp.max_marks} marks</span><span>·</span><span>+${pp.scan_buffer_minutes} min scan</span></div>`;
+    if(pp.locked){
+      card.appendChild(el("button","lockedBtn","🔒 Available in pack")).disabled=true;
+    }else{
+      const b=el("button","primaryBtn","Start paper →");
+      b.onclick=()=>{ state.activePaper=pp; go("rules"); };
+      card.appendChild(b);
+    }
+    gridEl.appendChild(card);
+  });
+}
+
+/* ============================================================================
+   STAGE: RULES
+============================================================================ */
+function renderRules(){
+  const p=state.activePaper;
+  const main=$("#main"); main.innerHTML="";
+  const page=el("div","page");
+  const rules=[
+    ["⏱",`${p.duration_minutes} minutes`,"Writing time, same as the real exam."],
+    ["📸",`+${p.scan_buffer_minutes} minutes`,"Extra buffer to scan and upload your sheets."],
+    ["🔒","Model answers stay locked","They unlock only after you submit. No peeking."],
+    ["✍️","Self-assessment","You score yourself against the official marking scheme."]
+  ].map(([i,h,s])=>`<div class="ruleItem"><span class="ruleIcon">${i}</span><div><div class="ruleHead">${h}</div><div class="ruleSub">${s}</div></div></div>`).join("");
+  page.innerHTML=`
+    <button class="linkBack" id="back">← Back to papers</button>
+    <div class="rulesCard">
+      <p class="eyebrow">Before you begin</p>
+      <h1>${esc(p.title)}</h1>
+      <p class="lead">Once you press start, the clock runs and cannot be paused. Write your answers on paper, then scan or photograph them and upload before the window closes.</p>
+      <div class="ruleList">${rules}</div>
+      <label class="checkRow"><input type="checkbox" id="agree"><span>I understand the timer cannot be paused and will submit within the window.</span></label>
+      <button class="primaryBtn bigBtn" id="begin" disabled style="opacity:.45;cursor:not-allowed;">Start the clock</button>
+      ${DEMO_FAST?`<p class="demoNote">Demo mode: the ${p.duration_minutes}+${p.scan_buffer_minutes} min window is compressed to 90 seconds so the timer and submission gate are visible.</p>`:""}
+    </div>`;
+  main.appendChild(page);
+  $("#back",page).onclick=()=>{ resetToLibrary(); };
+  const begin=$("#begin",page), agree=$("#agree",page);
+  agree.onchange=()=>{ begin.disabled=!agree.checked; begin.style.opacity=agree.checked?1:.45; begin.style.cursor=agree.checked?"pointer":"not-allowed"; };
+  begin.onclick=async ()=>{ if(begin.disabled)return; const r=await db.createAttempt(p.id); state.attempt=r.data; state.uploads=[]; state.scores={}; go("exam"); };
+}
+
+/* ============================================================================
+   STAGE: EXAM ROOM
+============================================================================ */
+function renderExam(){
+  const p=state.activePaper, u=state.user;
+  const total=windowSeconds(p);
+  const startMs=Date.now();                 // server truth in production
+  const main=$("#main"); main.innerHTML="";
+
+  const sectionsHtml=p.sections.map(sec=>`
+    <div class="section">
+      <div class="sectionHead"><span class="sectionName">${sec.name}</span><span class="sectionNote">${sec.note}</span></div>
+      ${sec.questions.map(q=>`<div class="question"><span class="qNum">Q${q.n}</span><span class="qText">${esc(q.text)}</span><span class="qMarks">[${q.marks}]</span></div>`).join("")}
+    </div>`).join("");
+  const watermarks=Array.from({length:9}).map(()=>`<span class="watermarkText">${esc(u.email)} · ${new Date().toLocaleDateString("en-IN")}</span>`).join("");
+
+  const wrap=el("div","examWrap");
+  wrap.innerHTML=`
+    <div class="timerBar" id="timerBar">
+      <div><span class="timerLabel">Time remaining</span><div class="timerClock" id="clock">${fmtClock(total)}</div></div>
+      <div class="timerTrack"><div class="timerFill" id="fill" style="width:100%"></div></div>
+      <button class="submitBtn" id="submit">Submit paper</button>
+    </div>
+    <div class="examGrid">
+      <section class="viewer">
+        <div class="viewerHead"><span class="boardTag">${p.board}</span><span class="viewerTitle">${esc(p.title)}</span><span class="marksTag">${p.max_marks} marks</span></div>
+        <div class="watermarkLayer" aria-hidden="true">${watermarks}</div>
+        <div class="paperSheet">${sectionsHtml}</div>
+      </section>
+      <aside class="uploadRail">
+        <h3 class="railTitle">Your answer sheets</h3>
+        <p class="railSub">Scan or photograph each page, then drop them here.</p>
+        <div class="dropZone" id="drop">
+          <div class="dropIcon">⬆</div><div class="dropText">Drag images here</div><div class="dropSub">or click to browse</div>
+          <input type="file" accept="image/*" multiple id="file" style="display:none">
+        </div>
+        <div class="thumbGrid" id="thumbs"></div>
+        <div class="uploadCount" id="count">No pages uploaded yet</div>
+      </aside>
+    </div>`;
+  main.appendChild(wrap);
+
+  // upload handling
+  const fileInput=$("#file",wrap), drop=$("#drop",wrap), thumbs=$("#thumbs",wrap), count=$("#count",wrap);
+  function renderThumbs(){
+    thumbs.innerHTML="";
+    state.uploads.forEach((up,i)=>{
+      const t=el("div","thumb");
+      t.innerHTML=`<img src="${up.url}" alt=""><span class="thumbBadge">P${i+1}</span><button class="thumbRemove" data-id="${up.id}">×</button>`;
+      thumbs.appendChild(t);
+    });
+    thumbs.querySelectorAll(".thumbRemove").forEach(b=>b.onclick=()=>{ state.uploads=state.uploads.filter(x=>x.id!==b.dataset.id); renderThumbs(); });
+    count.textContent = state.uploads.length===0 ? "No pages uploaded yet" : `${state.uploads.length} page${state.uploads.length>1?"s":""} ready`;
+  }
+  function addFiles(list){
+    Array.from(list).filter(f=>f.type.startsWith("image/")).forEach(f=>{
+      state.uploads.push({id:Math.random().toString(36).slice(2,9), name:f.name, url:URL.createObjectURL(f)});
+    });
+    renderThumbs();
+  }
+  drop.onclick=()=>fileInput.click();
+  fileInput.onchange=e=>addFiles(e.target.files);
+  drop.ondragover=e=>{e.preventDefault();drop.classList.add("over");};
+  drop.ondragleave=()=>drop.classList.remove("over");
+  drop.ondrop=e=>{e.preventDefault();drop.classList.remove("over");addFiles(e.dataTransfer.files);};
+
+  // submit
+  function doSubmit(late){
+    if(timerId){clearInterval(timerId);timerId=null;}
+    db.submitAttempt(state.attempt, late).then(r=>{ state.attempt=r.data; go("submitted"); });
+  }
+  $("#submit",wrap).onclick=()=>doSubmit(false);
+
+  // timer derived from startMs — not an accumulating tick
+  const clock=$("#clock",wrap), fill=$("#fill",wrap), bar=$("#timerBar",wrap);
+  function tick(){
+    const remaining = total - Math.floor((Date.now()-startMs)/1000);
+    clock.textContent=fmtClock(remaining);
+    const pct=Math.max(0,Math.min(100,(remaining/total)*100));
+    fill.style.width=pct+"%";
+    const low=remaining<=20;
+    clock.classList.toggle("low",low); fill.classList.toggle("low",low); bar.classList.toggle("low",low);
+    if(remaining<=0) doSubmit(true);
+  }
+  tick();
+  timerId=setInterval(tick,250);
+}
+
+/* ============================================================================
+   STAGE: SUBMITTED
+============================================================================ */
+function renderSubmitted(){
+  const a=state.attempt;
+  const main=$("#main"); main.innerHTML="";
+  const page=el("div","page");
+  page.innerHTML=`
+    <div class="submittedCard">
+      <div class="checkSeal">✓</div>
+      <h1>Paper submitted</h1>
+      <p class="lead" style="margin-left:auto;margin-right:auto;">Your answer sheets are locked in. The model answers and marking scheme are now unlocked for self-assessment.</p>
+      ${a&&a.late?`<div class="lateChip">Submitted at the buffer limit · auto-saved</div>`:""}
+      <button class="primaryBtn bigBtn" id="cont">Unlock model answers →</button>
+    </div>`;
+  main.appendChild(page);
+  $("#cont",page).onclick=()=>go("results");
+}
+
+/* ============================================================================
+   STAGE: RESULTS / SELF-ASSESS
+============================================================================ */
+function renderResults(){
+  const p=state.activePaper, a=state.attempt;
+  const main=$("#main"); main.innerHTML="";
+
+  if(a && a.self_score!=null){
+    const pct=Math.round((a.self_score/p.max_marks)*100);
+    const page=el("div","page");
+    page.innerHTML=`
+      <div class="scoreHero">
+        <p class="eyebrow">Self-assessment complete</p>
+        <div class="scoreBig">${a.self_score}<span class="scoreOf">/${p.max_marks}</span></div>
+        <div class="scorePct">${pct}%</div>
+        <div class="scoreBarTrack"><div class="scoreBarFill" style="width:${pct}%"></div></div>
+        <p class="lead">Want a human examiner to check this paper and send back an annotated copy?</p>
+        <div class="upsellRow">
+          <button class="goldGhost">Upgrade to Gold review →</button>
+          <button class="primaryBtn" id="done">Back to papers</button>
+        </div>
+      </div>`;
+    main.appendChild(page);
+    $("#done",page).onclick=resetToLibrary;
+    return;
+  }
+
+  const sheets = state.uploads.length===0
+    ? `<div class="emptySheets">No sheets were uploaded in this attempt.</div>`
+    : `<div class="sheetThumbs">${state.uploads.map((u,i)=>`<div class="sheetThumb"><img src="${u.url}" alt=""><span class="thumbBadge">P${i+1}</span></div>`).join("")}</div>`;
+
+  const page=el("div","page");
+  page.innerHTML=`
+    <div class="pageHead">
+      <div><p class="eyebrow">Self-assessment</p><h1>Score yourself</h1><p class="lead">Compare your sheets to the marking scheme. Award yourself marks for each question.</p></div>
+      <div class="runningCard"><span class="packLabel">Running total</span><div class="runningVal" id="running">0<span class="scoreOf">/${p.max_marks}</span></div><span class="packLabel" id="markedCount">0/${p.model_answers.length} marked</span></div>
+    </div>
+    <div class="assessGrid">
+      <div class="sheetCol"><h3 class="railTitle">Your uploaded sheets</h3>${sheets}</div>
+      <div class="answerCol" id="answerCol"></div>
+    </div>`;
+  main.appendChild(page);
+
+  const col=$("#answerCol",page);
+  p.model_answers.forEach(q=>{
+    const card=el("div","answerCard");
+    const steps=Array.from({length:q.marks+1}).map((_,m)=>`<button class="stepBtn" data-q="${q.n}" data-m="${m}">${m}</button>`).join("");
+    card.innerHTML=`
+      <div class="answerHead"><span class="qNum">Q${q.n}</span><span class="answerMax">out of ${q.marks}</span></div>
+      <p class="answerText">${esc(q.answer)}</p>
+      <div class="scoreInputRow"><span class="scoreInputLabel">Marks you'd give yourself</span><div class="stepper">${steps}</div></div>`;
+    col.appendChild(card);
+  });
+
+  const finishBtn=el("button","primaryBtn bigBtn");
+  finishBtn.disabled=true; finishBtn.style.opacity=.45; finishBtn.style.cursor="not-allowed";
+  finishBtn.textContent=`Mark all ${p.model_answers.length} questions`;
+  col.appendChild(finishBtn);
+
+  function refresh(){
+    let total=0, answered=0;
+    p.model_answers.forEach(q=>{ if(state.scores[q.n]!=null){ total+=Number(state.scores[q.n]); answered++; } });
+    $("#running",page).innerHTML=`${total}<span class="scoreOf">/${p.max_marks}</span>`;
+    $("#markedCount",page).textContent=`${answered}/${p.model_answers.length} marked`;
+    const all=answered===p.model_answers.length;
+    finishBtn.disabled=!all; finishBtn.style.opacity=all?1:.45; finishBtn.style.cursor=all?"pointer":"not-allowed";
+    finishBtn.textContent=all?"See my score":`Mark all ${p.model_answers.length} questions`;
+  }
+
+  col.querySelectorAll(".stepBtn").forEach(b=>{
+    b.onclick=()=>{
+      const qn=b.dataset.q, m=Number(b.dataset.m);
+      state.scores[qn]=m;
+      col.querySelectorAll(`.stepBtn[data-q="${qn}"]`).forEach(x=>x.classList.toggle("on", Number(x.dataset.m)===m));
+      refresh();
+    };
+  });
+
+  finishBtn.onclick=()=>{
+    if(finishBtn.disabled)return;
+    const total=p.model_answers.reduce((acc,q)=>acc+(state.scores[q.n]!=null?Number(state.scores[q.n]):0),0);
+    state.attempt={...state.attempt, self_score:total};
+    go("results");
+  };
+}
+
+/* ============================================================================
+   ROUTER
+============================================================================ */
+function go(stage){
+  if(timerId && stage!=="exam"){ clearInterval(timerId); timerId=null; }
+  state.stage=stage;
+  renderHeader();
+  ({library:renderLibrary, rules:renderRules, exam:renderExam, submitted:renderSubmitted, results:renderResults}[stage])();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function resetToLibrary(){ state.activePaper=null; state.attempt=null; state.uploads=[]; state.scores={}; go("library"); }
+
+/* ============================================================================
+   BOOT
+============================================================================ */
+(async function init(){
+  const p=await db.listPapers(); const pur=await db.getPurchase();
+  state.papers=p.data; state.purchase=pur.data;
+  go("library");
+})();
+</script>
+</body>
+</html>
