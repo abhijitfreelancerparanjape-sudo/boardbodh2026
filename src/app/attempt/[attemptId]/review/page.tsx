@@ -48,13 +48,20 @@ export default async function ReviewPage({
       examName={review.exam.name}
       late={review.late}
       maxMarks={review.maxMarks}
-      initialTotal={review.selfScoreTotal}
+      autoScoreTotal={review.autoScoreTotal}
+      finalized={review.finalized}
+      finalTotal={review.finalized ? (review.attempt.auto_score ?? 0) + (review.selfScoreTotal ?? 0) : null}
+      weakConcepts={review.weakConcepts}
       questions={review.questions.map((q) => ({
         attemptQuestionId: q.attemptQuestionId,
         prompt: q.question.prompt,
         format: q.question.question_format,
-        marks: Number(q.question.marks),
+        marks: q.max,
         answer: q.answer,
+        isAuto: q.isAuto,
+        correct: q.correct,
+        correctAnswer: q.correctAnswer,
+        awarded: q.awarded,
         rubric: q.rubric.map((rc) => ({
           id: rc.id,
           text: rc.text,

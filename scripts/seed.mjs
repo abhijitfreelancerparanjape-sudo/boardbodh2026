@@ -89,22 +89,29 @@ function buildQuestions() {
   const rid = () => `60000000-0000-0000-0000-${(++rn).toString(16).padStart(12, "0")}`;
 
   for (const c of concepts) {
+    const mcqOptions = [
+      "A) An unrelated definition",
+      "B) The correct standard statement",
+      "C) A common misconception",
+      "D) None of the above",
+    ];
     const templates = [
       {
+        // Objective: auto-scored. The single rubric component holds the exact
+        // correct answer (matched against the student's stored answer).
         question_format: "true_false",
         difficulty_band: "foundational",
-        prompt: `State whether the following is true or false, with a one-line justification: "${c.name} applies only in a vacuum."`,
+        prompt: `State whether the following is true or false: "${c.name} applies only in a vacuum."`,
         options: ["True", "False"],
-        components: [
-          { text: `Correct answer: False, with a sound one-line justification referencing ${c.name}.`, criticality: "high", marks: 1 },
-        ],
+        components: [{ text: "False", criticality: "high", marks: 1 }],
       },
       {
+        // Objective: auto-scored. Component text is the exact correct option.
         question_format: "mcq",
         difficulty_band: "board_level",
         prompt: `Which option best states ${c.name}?`,
-        options: ["A) An unrelated definition", "B) The correct standard statement", "C) A common misconception", "D) None of the above"],
-        components: [{ text: "Correct option: B", criticality: "high", marks: 1 }],
+        options: mcqOptions,
+        components: [{ text: mcqOptions[1], criticality: "high", marks: 1 }],
       },
       {
         question_format: "short",
