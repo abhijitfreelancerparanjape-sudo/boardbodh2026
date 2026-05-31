@@ -22,6 +22,13 @@ export async function getPrimarySubject(): Promise<Subject | null> {
   return data;
 }
 
+export async function getExamById(examId: string): Promise<Exam | null> {
+  const db = createAdminClient();
+  const { data, error } = await db.from("exams").select("*").eq("id", examId).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 // The fixed exam progression for a subject, in sequence order.
 export async function getExamSequence(subjectId: string): Promise<Exam[]> {
   const db = createAdminClient();

@@ -67,3 +67,68 @@ export const EXAM_KIND_LABEL: Record<ExamKind, string> = {
   unit_test: "Unit Test",
   terminal: "Terminal Exam",
 };
+
+export type AttemptStatus = "in_progress" | "submitted" | "expired";
+
+export interface Attempt {
+  id: string;
+  user_id: string;
+  exam_id: string;
+  started_at: string;
+  submitted_at: string | null;
+  status: AttemptStatus;
+  auto_score: number | null;
+  self_score: number | null;
+  weak_concepts: string[];
+  created_at: string;
+}
+
+export interface Question {
+  id: string;
+  concept_id: string;
+  board_style: Board;
+  question_format: QuestionFormat;
+  prompt: string;
+  options: string[] | null;
+  marks: number;
+  keywords: string[];
+  difficulty_band: DifficultyBand;
+  difficulty_score: number;
+  source: QuestionSource;
+  status: QuestionStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RubricComponent {
+  id: string;
+  question_id: string;
+  text: string;
+  criticality: Criticality;
+  marks: number;
+  sort_order: number;
+}
+
+export const CRITICALITY_LABEL: Record<Criticality, string> = {
+  high: "High",
+  medium: "Medium",
+  low: "Low",
+};
+
+export const QUESTION_FORMAT_LABEL: Record<QuestionFormat, string> = {
+  mcq: "Multiple choice",
+  fill_blank: "Fill in the blank",
+  true_false: "True / False",
+  two_tier: "Two-tier",
+  assertion_reason: "Assertion-Reason",
+  short: "Short answer",
+  long: "Long answer",
+  numerical: "Numerical",
+  error_detection: "Error detection",
+  compare_contrast: "Compare and contrast",
+  diagram: "Diagram",
+};
+
+// Objective formats auto-score against the correct-answer rubric component;
+// free-text formats are self-assessed against the weighted rubric.
+export const FREE_TEXT_FORMATS: QuestionFormat[] = ["short", "long", "compare_contrast"];

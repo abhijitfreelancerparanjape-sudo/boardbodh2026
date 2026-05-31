@@ -66,13 +66,12 @@ export default async function Dashboard() {
               Step {nextExam.sequence_index} of {exams.length}
             </span>
           </div>
-          <button
-            disabled
-            className="mt-5 cursor-not-allowed rounded-full bg-ink/30 px-5 py-2 text-sm font-medium text-bone"
-            title="The timed attempt flow arrives in the next step"
+          <Link
+            href={`/exam/${nextExam.id}`}
+            className="mt-5 inline-block rounded-full bg-ink px-5 py-2 text-sm font-medium text-bone transition-opacity hover:opacity-90"
           >
-            Start (coming next step)
-          </button>
+            Start this exam →
+          </Link>
         </section>
       )}
 
