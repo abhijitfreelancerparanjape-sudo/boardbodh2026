@@ -5,7 +5,7 @@ This file is read on every session. Keep it accurate.
 ## What this is
 A board-exam intelligence platform for Std 12 Physics (CBSE + Maharashtra). Students follow a guided year-long progression of exams (chapter exam -> unit test -> terminal), never see the same question twice, and learn which concepts they are weakest on. This repo is Phase 0: the engine running on mock Physics content. No AI generation, no real papers, no studio, no Gold tier yet.
 
-Working name: APP_NAME (placeholder, pending IP India trademark clearance — do not print a final brand name anywhere public until confirmed).
+Working name: BoardBodh (used as the internal/working name and for the repo/Vercel project). Still pending IP India trademark clearance, so treat it as the working name only and do not present it as a final, confirmed public brand until cleared. The in-app wordmark defaults to APP_NAME in code and is driven by NEXT_PUBLIC_APP_NAME.
 
 ## Stack (match my existing products Abhilekh and Saral Studio)
 - Next.js 15 (App Router)
@@ -16,9 +16,11 @@ Working name: APP_NAME (placeholder, pending IP India trademark clearance — do
 
 ## Accounts
 All three services use the same account: abhijitfreelancerparanjape@gmail.com
-- GitHub: under abhijitfreelancerparanjape@gmail.com
-- Vercel: under abhijitfreelancerparanjape@gmail.com
+- GitHub: owner abhijitfreelancerparanjape-sudo. Repo: https://github.com/abhijitfreelancerparanjape-sudo/boardbodh2026
+- Vercel: team abhijitfreelancerparanjape-2749s-projects. Project: https://vercel.com/abhijitfreelancerparanjape-2749s-projects/boardbodh
 - Supabase: under abhijitfreelancerparanjape@gmail.com
+
+Note: pushing and deploying require being authenticated as the abhijitfreelancerparanjape-sudo GitHub account and the abhijitfreelancerparanjape-2749s-projects Vercel team. A machine logged into a different account (e.g. paranjapeabhijitashok) can read the public repo but cannot push or deploy.
 
 ## Style (Zenith system)
 - Colors: Ink #181613, Bone #f3ede2, Terracotta #b8553a, Sage #6b7d5c
