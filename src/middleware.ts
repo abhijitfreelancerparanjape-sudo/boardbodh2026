@@ -42,7 +42,9 @@ export async function middleware(request: NextRequest) {
   }
 
   const path = request.nextUrl.pathname;
-  const isProtectedPage = ["/dashboard", "/exam", "/attempt"].some((p) => path.startsWith(p));
+  const isProtectedPage = ["/dashboard", "/exam", "/attempt", "/studio"].some((p) =>
+    path.startsWith(p)
+  );
   const isAuthPage = path === "/login" || path === "/signup";
 
   // Protect student PAGE routes (API routes handle their own 401s).

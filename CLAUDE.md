@@ -3,7 +3,7 @@
 This file is read on every session. Keep it accurate.
 
 ## What this is
-A board-exam intelligence platform for Std 12 Physics (CBSE + Maharashtra). Students follow a guided year-long progression of exams (chapter exam -> unit test -> terminal), never see the same question twice, and learn which concepts they are weakest on. This repo is Phase 0: the engine running on mock Physics content. No AI generation, no real papers, no studio, no Gold tier yet.
+A board-exam intelligence platform for Std 12 Physics (CBSE + Maharashtra). Students follow a guided year-long progression of exams (chapter exam -> unit test -> terminal), never see the same question twice, and learn which concepts they are weakest on. Phase 0 (the engine on mock Physics, with student auth) is complete and deployed. Phase 1 has begun: a server-side Claude studio that generates original board-style questions which land as draft and require human approval before going live, with per-generation cost logging. No Gold (human evaluation) tier, no real official-paper ingestion yet.
 
 App name: BoardBodh. Used as the app name, in-app wordmark, repo, and Vercel project. The wordmark is driven by NEXT_PUBLIC_APP_NAME and defaults to "BoardBodh" in code. Trademark clearance with IP India is still pending, so keep that in mind before any large public/brand launch, but BoardBodh is the working app name now.
 
@@ -11,7 +11,7 @@ App name: BoardBodh. Used as the app name, in-app wordmark, repo, and Vercel pro
 - Next.js 15 (App Router)
 - Supabase (Postgres + Auth)
 - Vercel (deploy)
-- Claude API, server-side only (NOT used in Phase 0; arrives Phase 1)
+- Claude API, server-side only. In use from Phase 1 for studio question generation (`lib/anthropic`, `/api/generate`). Model via ANTHROPIC_MODEL (default claude-opus-4-8). Every call is logged to `ai_generation_usage` with token counts + cost (USD and approx INR via USD_TO_INR). Studio is gated to ADMIN_EMAILS.
 - TypeScript throughout
 
 ## Accounts
@@ -41,7 +41,12 @@ Note: pushing and deploying require being authenticated as the abhijitfreelancer
 5. Timed attempt flow with server-authoritative timer and submission gate (port logic from the silver prototype reference).
 6. Scoring: auto-score objective formats; rubric-based self-assessment for free-text answers; then surface the 2-3 weakest concepts (computed against rubric components).
 
+## Phase 1 update (built since Phase 0)
+- AI question generation via Claude (server-side) and the studio authoring + per-question review/approve UI are now BUILT. Generated questions are `source='generated'`, land as `status='draft'` with a `review_flag`, and only go live on admin approval.
+- Cost monitoring: `ai_generation_usage` table logs model, tokens, and cost per generation for client discussion.
+
 ## Out of scope for Phase 0 (do NOT build these yet)
+Note: the two AI/studio items below were Phase 0 out-of-scope and have now been intentionally built in Phase 1 (see Phase 1 update above). Still genuinely out of scope: Gold (human evaluation) tier, real official-paper ingestion, an AI free-text grader (students still self-assess).
 - AI question generation / any Claude API calls
 - AI scoring engine that grades free-text against the rubric (Phase 0 models the rubric and self-assesses against it, but builds NO AI grader)
 - Real official papers ingestion
