@@ -13,7 +13,9 @@
     "seed": "node scripts/seed.mjs",
     "serve:demo": "node scripts/serve-demo.mjs",
     "attempt:demo": "node scripts/attempt-demo.mjs",
-    "generate:test": "node scripts/generate-test.mjs"
+    "generate:test": "node scripts/generate-test.mjs",
+    "generate:batch": "node scripts/generate-batch.mjs",
+    "seed:sources": "node scripts/seed-sources.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
