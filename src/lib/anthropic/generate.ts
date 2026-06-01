@@ -12,6 +12,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { createAdminClient } from "@/lib/supabase/server";
 import { computeCostUSD, type TokenUsage } from "./pricing";
+import { SYSTEM_PROMPT, OUTPUT_SCHEMA, buildUserPrompt } from "./prompts";
 import type { Board, DifficultyBand, QuestionFormat } from "@/types/db";
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-4-8";
@@ -24,63 +25,6 @@ const BAND_SCORE: Record<DifficultyBand, number> = {
 };
 
 const FREE_TEXT: QuestionFormat[] = ["short", "long", "compare_contrast"];
-
-const SYSTEM_PROMPT = `You are an expert Std 12 (Class XII) Physics paper setter for Indian boards (CBSE and Maharashtra State Board). You write original, board-style exam questions and their marking schemes.
-
-Rules:
-- Write ORIGINAL questions in the style of the requested board. Never copy a real past-paper question verbatim.
-- Match the requested difficulty band:
-  - foundational: recall and direct single-step application.
-  - board_level: standard board exam difficulty, multi-step.
-  - advanced: challenging, multi-concept or derivation-heavy.
-- Each question needs a criticality-weighted rubric (the marking scheme). The question's marks equal the sum of its rubric component marks.
-- For OBJECTIVE formats (mcq, true_false, numerical): exactly ONE rubric component, and its "text" MUST be the exact correct answer so it can be auto-matched:
-  - mcq: "text" must be exactly equal to the correct option string (including its "A) " / "B) " prefix). Provide 4 options.
-  - true_false: "text" must be exactly "True" or "False". Provide options ["True","False"].
-  - numerical: "text" must be the exact expected numeric answer with unit.
-- For FREE-TEXT formats (short, long): multiple weighted rubric components, each a distinct scoring point with a criticality of high, medium, or low.
-- keywords: the must-use scientific terms for the question (facts).
-- flag_reason: if you are uncertain about correctness, syllabus fit, or wording, briefly explain why so a human reviews it. If the question is clean, return an empty string.
-- Be scientifically correct. Use plain text for math (no LaTeX): use / for division and ^ for exponents.`;
-
-const OUTPUT_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    questions: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          question_format: {
-            type: "string",
-            enum: ["mcq", "true_false", "numerical", "short", "long"],
-          },
-          prompt: { type: "string" },
-          options: { type: "array", items: { type: "string" } },
-          keywords: { type: "array", items: { type: "string" } },
-          rubric: {
-            type: "array",
-            items: {
-              type: "object",
-              additionalProperties: false,
-              properties: {
-                text: { type: "string" },
-                criticality: { type: "string", enum: ["high", "medium", "low"] },
-                marks: { type: "number" },
-              },
-              required: ["text", "criticality", "marks"],
-            },
-          },
-          flag_reason: { type: "string" },
-        },
-        required: ["question_format", "prompt", "options", "keywords", "rubric", "flag_reason"],
-      },
-    },
-  },
-  required: ["questions"],
-};
 
 interface GenQuestion {
   question_format: QuestionFormat;
@@ -137,7 +81,13 @@ export async function generateQuestions(params: {
   const chapterName = (Array.isArray(concept.chapter) ? concept.chapter[0] : concept.chapter)?.name ?? "";
 
   const count = Math.max(1, Math.min(10, params.count));
-  const userPrompt = `Generate ${count} original ${params.board} Std 12 Physics questions for the concept "${concept.name}" (chapter: "${chapterName}") at the "${params.band}" difficulty band. Vary the formats sensibly for the band. Return them in the required JSON structure.`;
+  const userPrompt = buildUserPrompt({
+    conceptName: concept.name as string,
+    chapterName,
+    board: params.board,
+    band: params.band,
+    count,
+  });
 
   const client = new Anthropic({ apiKey });
 

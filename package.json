@@ -12,7 +12,8 @@
     "lint": "next lint",
     "seed": "node scripts/seed.mjs",
     "serve:demo": "node scripts/serve-demo.mjs",
-    "attempt:demo": "node scripts/attempt-demo.mjs"
+    "attempt:demo": "node scripts/attempt-demo.mjs",
+    "generate:test": "node scripts/generate-test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
